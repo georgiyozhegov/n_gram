@@ -11,9 +11,10 @@ let mut model = Model::new(config);
 
 // Loading and tokenizing corpus
 let corpus = tiny_corpus()
-    .iter()
-    .map(|t| sos(eos(tokenize(t.to_owned()))))
-    .collect::<Vec<_>>();
+      .iter()
+      .map(|t| sos(eos(tokenize(t.to_owned()))))
+      .collect::<Vec<_>>();
+
 model.train(corpus);
 
 // Now you are ready to generate something
@@ -23,6 +24,8 @@ model.generate(&mut tokens, max);
 
 // Save model
 model.save("model.json").unwrap();
+// Reset model
+model.reset();
 
 // Load model back
 model.load("model.json").unwrap();

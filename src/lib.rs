@@ -1,9 +1,9 @@
 use rand::seq::SliceRandom;
+use std::cmp::max;
 use std::collections::HashMap;
 use std::error::Error;
 use std::fs::File;
 use std::io::Write;
-use std::cmp::max;
 
 
 
@@ -20,6 +20,9 @@ pub const EOS: &str = "__eos__";
 pub const DEFAULT_CONTEXT: usize = 2;
 pub const DEFAULT_SMOOTHING: bool = true;
 pub const DEFAULT_SAMPLING: f32 = 0.8;
+
+
+const SPLIT_TOKEN: &str = "<[SP]>";
 
 
 /// Splits text by whitespaces
@@ -164,7 +167,7 @@ fn cut(tokens: Vec<String>, context: usize) -> Vec<String>
 ///
 /// // context size (n-1) to use
 /// let context = 1;
-/// 
+///
 /// // Smoothing (using backoff):
 /// // - If you can, use trigrams
 /// // - If not, use bigrams
@@ -184,8 +187,11 @@ fn cut(tokens: Vec<String>, context: usize) -> Vec<String>
 /// ```
 /// Or set specific default value if needed:
 /// ```
-/// use n_gram::{Config, DEFAULT_SAMPLING};
-/// 
+/// use n_gram::{
+///       Config,
+///       DEFAULT_SAMPLING,
+/// };
+///
 /// let config = Config::new(3, true, DEFAULT_SAMPLING);
 /// ```
 pub struct Config
@@ -207,14 +213,16 @@ impl Config
       }
 }
 
-impl Default for Config {
-    fn default() -> Self {
-        Self {
-            context: 2,
-            smoothing: true,
-            sampling: 0.8,
-        }
-    }
+impl Default for Config
+{
+      fn default() -> Self
+      {
+            Self {
+                  context: 2,
+                  smoothing: true,
+                  sampling: 0.8,
+            }
+      }
 }
 
 
@@ -242,6 +250,9 @@ impl Default for Config {
 ///
 /// // Save model
 /// model.save("model.json").unwrap();
+///
+/// // Reset model
+/// model.reset();
 ///
 /// // Load model back
 /// model.load("model.json").unwrap();
@@ -280,8 +291,7 @@ impl Model
       pub fn train(&mut self, corpus: Vec<Vec<String>>)
       {
             for tokens in corpus {
-                  let tokens = sos(eos(tokens));
-                  for n_gram in n_grams(tokens, self.config.context - 1) {
+                  for n_gram in n_grams(tokens, self.config.context + 1) {
                         if let Some(counts) = self.model.get_mut(&n_gram.0) {
                               if let Some(count) = counts.get_mut(&n_gram.1) {
                                     *count += 1;
@@ -312,10 +322,13 @@ impl SaveLoad for Model
       /// Returns file.write() status code.
       fn save(&self, path: &str) -> Result_<usize>
       {
+            println!("{:?}", self.model);
             let mut file = File::create(path)?;
-            let keys = self.model.keys().map(|k| k.join(" "));
-            let values = self.model.values();
-            let model = keys.zip(values).collect::<Vec<_>>();
+            let model = self
+                  .model
+                  .iter()
+                  .map(|(k, v)| (k.join(SPLIT_TOKEN), v))
+                  .collect::<Vec<_>>();
             let model = serde_json::to_string(&model)?;
             file.write(model.as_bytes())?;
             Ok(0)
@@ -326,14 +339,15 @@ impl SaveLoad for Model
       {
             let file = File::open(path)?;
             let model: Vec<(String, HashMap<String, u32>)> = serde_json::from_reader(file)?;
-            let mut model_ = HashMap::new();
-            for (key, value) in model.iter() {
-                  model_.insert(
-                        key.split_whitespace().map(|t| t.to_string()).collect::<Vec<_>>(),
-                        value.clone(),
-                  );
-            }
-            self.model = model_;
+            self.model = model
+                  .iter()
+                  .map(|(k, v)| {
+                        (
+                              k.split(SPLIT_TOKEN).map(|t| t.to_string()).collect::<Vec<_>>(),
+                              v.to_owned(),
+                        )
+                  })
+                  .collect::<HashMap<Vec<String>, HashMap<String, u32>>>();
             Ok(())
       }
 }
