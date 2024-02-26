@@ -6,7 +6,7 @@ Simple tool for training n-gram language model.
 use n_gram::*;
 
 // Initializing model
-let config = Config::new(3, true);
+let config = Config::default();
 let mut model = Model::new(config);
 
 // Loading and tokenizing corpus
