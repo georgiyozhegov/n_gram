@@ -1,5 +1,5 @@
 # Info
-Simple tool for training n-gram language model.
+Simple tool for training n-gram language model. Inspired by [this course](https://lena-voita.github.io/nlp_course.html)
 
 # Usage
 ```rust
