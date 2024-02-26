@@ -2,7 +2,9 @@ use rand::seq::SliceRandom;
 use std::cmp::max;
 use std::collections::HashMap;
 use std::error::Error;
+#[cfg(feature = "saveload")]
 use std::fs::File;
+#[cfg(feature = "saveload")]
 use std::io::Write;
 
 
@@ -22,6 +24,7 @@ pub const DEFAULT_SMOOTHING: bool = true;
 pub const DEFAULT_SAMPLING: f32 = 0.8;
 
 
+#[cfg(feature = "saveload")]
 const SPLIT_TOKEN: &str = "<[SP]>";
 
 
@@ -93,6 +96,7 @@ pub fn n_grams(tokens: Vec<String>, n: usize) -> Vec<(Vec<String>, String)>
 /// ```
 ///
 /// Size of corpus is about 50 samples. Also, this corpus is AI-generated.
+#[cfg(feature = "corpus")]
 pub fn tiny_corpus() -> Vec<String>
 {
       vec![
@@ -194,6 +198,7 @@ fn cut(tokens: Vec<String>, context: usize) -> Vec<String>
 ///
 /// let config = Config::new(3, true, DEFAULT_SAMPLING);
 /// ```
+#[derive(Debug, Clone)]
 pub struct Config
 {
       context: usize,
@@ -257,6 +262,7 @@ impl Default for Config
 /// // Load model back
 /// model.load("model.json").unwrap();
 /// ```
+#[derive(Debug, Clone)]
 pub struct Model
 {
       config: Config,
@@ -315,6 +321,7 @@ impl Model
       }
 }
 
+#[cfg(feature = "saveload")]
 impl SaveLoad for Model
 {
       /// Saves model into json file.
@@ -322,7 +329,6 @@ impl SaveLoad for Model
       /// Returns file.write() status code.
       fn save(&self, path: &str) -> Result_<usize>
       {
-            println!("{:?}", self.model);
             let mut file = File::create(path)?;
             let model = self
                   .model
@@ -356,7 +362,7 @@ impl Predict for Model
 {
       /// Predicts next token for given tokens.
       ///
-      /// ```
+      /// ```rust
       /// use n_gram::{
       ///       tokenize,
       ///       Config,
@@ -378,7 +384,7 @@ impl Predict for Model
                   {
                         let mut counts = counts.iter().collect::<Vec<_>>();
                         counts.sort_by(|a, b| b.1.cmp(&a.1));
-                        let samples = max(1, (counts.len() as f32 * self.config.sampling) as usize);
+                        let samples = max(1, (counts.len() as f32 * self.config.sampling) as usize); // at least one sample
                         counts.into_iter().map(|(k, _)| k).take(samples).collect::<Vec<_>>()
                   }
                   .choose(&mut rand::thread_rng())
@@ -395,7 +401,7 @@ impl Generate for Model
 {
       /// Generates tokens using Model::predict().
       ///
-      /// ```
+      /// ```rust
       /// use n_gram::{
       ///       tokenize,
       ///       Config,
@@ -438,6 +444,7 @@ pub trait Generate
 }
 
 
+#[cfg(feature = "saveload")]
 pub trait SaveLoad
 {
       fn save(&self, path: &str) -> Result_<usize>;

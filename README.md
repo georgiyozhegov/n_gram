@@ -24,11 +24,25 @@ model.generate(&mut tokens, max);
 
 // Save model
 model.save("model.json").unwrap();
+
 // Reset model
 model.reset();
 
 // Load model back
 model.load("model.json").unwrap();
+```
+
+# Installation
+```bash
+cargo add n_gram
+```
+If you want to save & load your models:
+```bash
+cargo add n_gram --features=saveload
+```
+If you want to load tiny corpus for training:
+```bash
+cargo add n_gram --features=corpus
 ```
 
 # Links
