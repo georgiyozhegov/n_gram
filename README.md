@@ -33,26 +33,13 @@ fn main() {
     model.load("model.json").unwrap();
 }
 ```
-You can load a 4-gram model trained on 10000 samples from the [Tiny Stories](https://huggingface.co/datasets/roneneldan/TinyStories) dataset:
-```rust
-use n_gram::*;
 
-fn main() {
-    let config = Config::new(3, DEFAULT_SMOOTHING, DEFAULT_SAMPLING);
-    let mut model = Modell::new(config);
-
-    model.load("models/tiny-stories-4n.json").unwrap();
-
-    let mut tokens = sos(tokenize("Once upon a"));
-    model.generate(&mut tokens, 100);
-
-    println!("{}", tokens.join(" "));
-}
-```
-Here are some examples of generated text:
+# Examples
+I trained a trigram model on 20000 samples from the [Tiny Stories](https://huggingface.co/datasets/roneneldan/TinyStories) dataset. Here are some examples of generated text:
 - "\_\_sos_\_ Once upon a time a mom, a dad, a big sister, and a little girl below shouted, "Look Mama! A talking cloud!" The little girl opened her hand, and the monkey happily ate it all in one day. She was so kind he said yes and showed him the pin. "I poked you with this. It is a storm. The waves were so tall and wide, it seemed like something was calling her to come to an end eventually. They all had an incredible songbird inside. Billy was happy and excited. \_\_eos_\_"
 - "\_\_sos_\_ Once upon a time there was a light girl with a basket. She then sent the basket to the washing machine. While the laundry was all hung up, Daisy and her family were getting ready to fly it, it suddenly flew away! The lion felt bad for being rude. He said, "It's my p
 leasure. It's important to remember to forgive. \_\_eos_\_"
+- "\_\_sos_\_ Once upon a time a family lived in a stream with many stones on the ground, it glistened in the sunshine. From that day forth they were always with her and learn with her and waved goodbye to Mommy. The bus driver was happy and flew away happily. Timmy felt proud of their pictures. \_\_eos_\_"
 
 # Installation
 ```bash
