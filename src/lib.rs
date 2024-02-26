@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use std::error::Error;
 use std::fs::File;
 use std::io::Write;
+use std::cmp::max;
 
 
 
@@ -12,9 +13,13 @@ type Result_<T> = Result<T, Box<dyn Error>>;
 /// Start-Of-Sentence token.
 pub const SOS: &str = "__sos__";
 
-
 /// End-Of-Sentence token.
 pub const EOS: &str = "__eos__";
+
+
+pub const DEFAULT_CONTEXT: usize = 2;
+pub const DEFAULT_SMOOTHING: bool = true;
+pub const DEFAULT_SAMPLING: f32 = 0.8;
 
 
 /// Splits text by whitespaces
@@ -157,29 +162,59 @@ fn cut(tokens: Vec<String>, context: usize) -> Vec<String>
 /// ```rust
 /// use n_gram::Config;
 ///
-/// let context = 1; // bigrams (context = n - 1)
-/// let smoothing = true;
+/// // context size (n-1) to use
+/// let context = 1;
+/// 
 /// // Smoothing (using backoff):
 /// // - If you can, use trigrams
 /// // - If not, use bigrams
 /// // - If even bigrams does not help, use unigrams
-/// let config = Config::new(context, smoothing);
+/// let smoothing = true;
+///
+/// // top-p% of samples (in this case - 20%)
+/// let sampling = 0.2;
+///
+/// let config = Config::new(context, smoothing, sampling);
+/// ```
+/// You can also use defaults:
+/// ```rust
+/// use n_gram::Config;
+///
+/// let config = Config::default();
+/// ```
+/// Or set specific default value if needed:
+/// ```
+/// use n_gram::{Config, DEFAULT_SAMPLING};
+/// 
+/// let config = Config::new(3, true, DEFAULT_SAMPLING);
 /// ```
 pub struct Config
 {
       context: usize,
       smoothing: bool,
+      sampling: f32,
 }
 
 impl Config
 {
-      pub fn new(context: usize, smoothing: bool) -> Self
+      pub fn new(context: usize, smoothing: bool, sampling: f32) -> Self
       {
             Self {
                   context,
                   smoothing,
+                  sampling,
             }
       }
+}
+
+impl Default for Config {
+    fn default() -> Self {
+        Self {
+            context: 2,
+            smoothing: true,
+            sampling: 0.8,
+        }
+    }
 }
 
 
@@ -189,7 +224,7 @@ impl Config
 /// use n_gram::*;
 ///
 /// // Initializing model
-/// let config = Config::new(3, true);
+/// let config = Config::default();
 /// let mut model = Model::new(config);
 ///
 /// // Loading and tokenizing corpus
@@ -315,7 +350,7 @@ impl Predict for Model
       ///       Predict, // trait for predict()
       /// };
       ///
-      /// let model = Model::new(Config::new(3, true)); // assuming that your model is trained.
+      /// let model = Model::new(Config::default()); // assuming that your model is trained.
       ///
       /// let tokens = tokenize("The quick brown".to_string());
       /// let next_token = model.predict(tokens);
@@ -329,7 +364,8 @@ impl Predict for Model
                   {
                         let mut counts = counts.iter().collect::<Vec<_>>();
                         counts.sort_by(|a, b| b.1.cmp(&a.1));
-                        counts.into_iter().map(|(k, _)| k).collect::<Vec<_>>()
+                        let samples = max(1, (counts.len() as f32 * self.config.sampling) as usize);
+                        counts.into_iter().map(|(k, _)| k).take(samples).collect::<Vec<_>>()
                   }
                   .choose(&mut rand::thread_rng())
                   .unwrap()
@@ -353,7 +389,7 @@ impl Generate for Model
       ///       Model,
       /// };
       ///
-      /// let model = Model::new(Config::new(3, true)); // assuming that your model is trained.
+      /// let model = Model::new(Config::default()); // assuming that your model is trained.
       /// let mut tokens = tokenize("The quick brown".to_string());
       /// let max = 10; // max 10 generated tokens.
       ///
