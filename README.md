@@ -27,3 +27,7 @@ model.save("model.json").unwrap();
 // Load model back
 model.load("model.json").unwrap();
 ```
+
+# Links
+[github](https://github.com/georgiyozhegov/n_gram)
+[crates.io](https://crates.io/crates/n_gram)
