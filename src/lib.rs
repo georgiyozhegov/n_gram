@@ -50,7 +50,7 @@ pub fn eos(tokens: Vec<String>) -> Vec<String>
 /// };
 ///
 /// let tokens = tokenize("Eat tasty cakes".to_string());
-/// let n = 2; // bigrams
+/// let n = 2; // bigrams (context window - one word)
 /// let n_grams = n_grams(tokens, n);
 ///
 /// assert_eq!(
@@ -67,8 +67,7 @@ pub fn eos(tokens: Vec<String>) -> Vec<String>
 pub fn n_grams(tokens: Vec<String>, n: usize) -> Vec<(Vec<String>, String)>
 {
       let mut n_grams = Vec::new();
-      for i in 0..tokens.len() - n + 1 {
-            // context & next token
+      for i in 0..tokens.len() - n {
             n_grams.push(((&tokens[i..i + n - 1]).to_vec(), (&tokens[i + n - 1]).to_owned()));
       }
       n_grams
@@ -176,6 +175,7 @@ impl Config
 /// ```rust
 /// use n_gram::*;
 ///
+/// // Initializing model
 /// let config = Config::new(3, false);
 /// let mut model = Model::new(config);
 ///
@@ -234,8 +234,8 @@ impl Model
             for tokens in corpus {
                   let tokens = sos(eos(tokens));
                   for n_gram in n_grams(tokens, self.config.context - 1) {
-                        if let Some(tokens) = self.model.get_mut(&n_gram.0) {
-                              tokens.push(n_gram.1);
+                        if let Some(tokens_) = self.model.get_mut(&n_gram.0) {
+                              tokens_.push(n_gram.1);
                         }
                         else {
                               self.model.insert(n_gram.0, vec![n_gram.1]);
