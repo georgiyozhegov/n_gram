@@ -29,5 +29,5 @@ model.load("model.json").unwrap();
 ```
 
 # Links
-[github](https://github.com/georgiyozhegov/n_gram)
+[github](https://github.com/georgiyozhegov/n_gram) <br>
 [crates.io](https://crates.io/crates/n_gram)
