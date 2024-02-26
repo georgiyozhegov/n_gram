@@ -33,7 +33,7 @@ fn main() {
     model.load("model.json").unwrap();
 }
 ```
-You can load a 4-gram model trained on 20000 samples from the [Tiny Stories](https://huggingface.co/datasets/roneneldan/TinyStories) dataset:
+You can load a 4-gram model trained on 10000 samples from the [Tiny Stories](https://huggingface.co/datasets/roneneldan/TinyStories) dataset:
 ```rust
 use n_gram::*;
 
@@ -50,8 +50,9 @@ fn main() {
 }
 ```
 Here are some examples of generated text:
-- "\_\_sos_\_ Once upon a time two friends, John and Bob. John was sad and she did a great job. Thank you for lending me Mittens." Lily smiled and forgot about being scary, and he handed Lucy a pencil. Lucy was happy, and felt that everything was right in the spot so she wouldn't make a mess. Can we fix the puzzle together?" Lily stopped crying. She realized that her dream was not just soaring, but experiencing life from both the sky and Jack felt proud that she had such a wonderful adventure and it was because he hadn't exercised. She told him he should think"
-- "\_\_sos_\_ Once upon a time in a big book with many pages. He learned about animals, colors, and shapes. He liked this nap so much that she ate it with Lily. They were scared and angry by the noise of a thing in the sky too. Its light was warm and inviting. She planted her feet and gave her some celery for a snack. \_\_eos_\_"
+- "\_\_sos_\_ Once upon a time a mom, a dad, a big sister, and a little girl below shouted, "Look Mama! A talking cloud!" The little girl opened her hand, and the monkey happily ate it all in one day. She was so kind he said yes and showed him the pin. "I poked you with this. It is a storm. The waves were so tall and wide, it seemed like something was calling her to come to an end eventually. They all had an incredible songbird inside. Billy was happy and excited. \_\_eos_\_"
+- "\_\_sos_\_ Once upon a time there was a light girl with a basket. She then sent the basket to the washing machine. While the laundry was all hung up, Daisy and her family were getting ready to fly it, it suddenly flew away! The lion felt bad for being rude. He said, "It's my p
+leasure. It's important to remember to forgive. \_\_eos_\_"
 
 # Installation
 ```bash
