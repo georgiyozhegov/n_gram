@@ -41,6 +41,7 @@ pub fn eos(tokens: Vec<String>) -> Vec<String>
       tokens
 }
 
+
 /// Creates list of n-grams from tokens
 ///
 /// ```rust
@@ -151,7 +152,19 @@ fn cut(tokens: Vec<String>, context: usize) -> Vec<String>
 }
 
 
-
+/// Config for Model.
+///
+/// ```rust
+/// use n_gram::Config;
+///
+/// let context = 1; // bigrams (context = n - 1)
+/// let smoothing = true;
+/// // Smoothing (using backoff):
+/// // - If you can, use trigrams
+/// // - If not, use bigrams
+/// // - If even bigrams does not help, use unigrams
+/// let config = Config::new(context, smoothing);
+/// ```
 pub struct Config
 {
       context: usize,
@@ -201,7 +214,7 @@ impl Config
 pub struct Model
 {
       config: Config,
-      model: HashMap<Vec<String>, Vec<String>>,
+      model: HashMap<Vec<String>, HashMap<String, u32>>,
 }
 
 impl Model
@@ -214,10 +227,10 @@ impl Model
             }
       }
 
-      fn get(&self, tokens: Vec<String>) -> Option<&Vec<String>>
+      fn get(&self, tokens: Vec<String>) -> Option<&HashMap<String, u32>>
       {
-            if let Some(tokens) = self.model.get(&tokens) {
-                  Some(tokens)
+            if let Some(tokens_) = self.model.get(&tokens) {
+                  Some(tokens_)
             }
             else if self.config.smoothing && tokens.len() > 0 {
                   // Backoff
@@ -234,11 +247,17 @@ impl Model
             for tokens in corpus {
                   let tokens = sos(eos(tokens));
                   for n_gram in n_grams(tokens, self.config.context - 1) {
-                        if let Some(tokens_) = self.model.get_mut(&n_gram.0) {
-                              tokens_.push(n_gram.1);
+                        if let Some(counts) = self.model.get_mut(&n_gram.0) {
+                              if let Some(count) = counts.get_mut(&n_gram.1) {
+                                    *count += 1;
+                              }
+                              else {
+                                    counts.insert(n_gram.1, 1);
+                              }
                         }
                         else {
-                              self.model.insert(n_gram.0, vec![n_gram.1]);
+                              self.model.insert(n_gram.0.clone(), HashMap::new());
+                              self.model.get_mut(&n_gram.0).unwrap().insert(n_gram.1, 1);
                         }
                   }
             }
@@ -271,12 +290,12 @@ impl SaveLoad for Model
       fn load(&mut self, path: &str) -> Result_<()>
       {
             let file = File::open(path)?;
-            let model: Vec<(String, Vec<String>)> = serde_json::from_reader(file)?;
+            let model: Vec<(String, HashMap<String, u32>)> = serde_json::from_reader(file)?;
             let mut model_ = HashMap::new();
             for (key, value) in model.iter() {
                   model_.insert(
                         key.split_whitespace().map(|t| t.to_string()).collect::<Vec<_>>(),
-                        value.to_vec(),
+                        value.clone(),
                   );
             }
             self.model = model_;
@@ -293,7 +312,7 @@ impl Predict for Model
       ///       tokenize,
       ///       Config,
       ///       Model,
-      ///       Predict, // trait for predict
+      ///       Predict, // trait for predict()
       /// };
       ///
       /// let model = Model::new(Config::new(3, true)); // assuming that your model is trained.
@@ -306,8 +325,14 @@ impl Predict for Model
       fn predict(&self, tokens: Vec<String>) -> String
       {
             let tokens = cut(tokens, self.config.context);
-            if let Some(possibilities) = self.get(tokens) {
-                  possibilities.choose(&mut rand::thread_rng()).unwrap()
+            if let Some(counts) = self.get(tokens) {
+                  {
+                        let mut counts = counts.iter().collect::<Vec<_>>();
+                        counts.sort_by(|a, b| b.1.cmp(&a.1));
+                        counts.into_iter().map(|(k, _)| k).collect::<Vec<_>>()
+                  }
+                  .choose(&mut rand::thread_rng())
+                  .unwrap()
             }
             else {
                   EOS
