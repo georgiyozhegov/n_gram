@@ -67,7 +67,7 @@ pub fn eos(tokens: Vec<String>) -> Vec<String>
 pub fn n_grams(tokens: Vec<String>, n: usize) -> Vec<(Vec<String>, String)>
 {
       let mut n_grams = Vec::new();
-      for i in 0..tokens.len() - n {
+      for i in 0..tokens.len() - n + 1 {
             n_grams.push(((&tokens[i..i + n - 1]).to_vec(), (&tokens[i + n - 1]).to_owned()));
       }
       n_grams
@@ -176,7 +176,7 @@ impl Config
 /// use n_gram::*;
 ///
 /// // Initializing model
-/// let config = Config::new(3, false);
+/// let config = Config::new(3, true);
 /// let mut model = Model::new(config);
 ///
 /// // Loading and tokenizing corpus
