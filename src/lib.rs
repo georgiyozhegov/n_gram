@@ -9,8 +9,6 @@ use std::fs::File;
 #[cfg(feature = "saveload")]
 use std::io::Write;
 
-type Result_<T> = Result<T, Box<dyn Error>>;
-
 /// Start-Of-Sentence token.
 pub const SOS: &str = "__sos__";
 /// End-Of-Sentence token.
