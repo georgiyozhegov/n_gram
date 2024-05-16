@@ -1,7 +1,9 @@
 use rand::seq::SliceRandom;
-use std::cmp::max;
-use std::collections::HashMap;
-use std::error::Error;
+use std::{
+    cmp::max,
+    collections::HashMap,
+    error::Error,
+};
 #[cfg(feature = "saveload")]
 use std::fs::File;
 #[cfg(feature = "saveload")]
