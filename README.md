@@ -23,7 +23,7 @@ fn main() {
     model.train(corpus);
 
     // Now you are ready to generate something
-    let mut tokens = sos(tokenize("The quick".to_string()));
+    let mut tokens = sos(tokenize("The quick".to_owned()));
     let max = 10; // max number of generated tokens
     model.generate(&mut tokens, max);
 
