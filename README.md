@@ -1,3 +1,5 @@
+<img src="https://github.com/georgiyozhegov/n_gram/assets/159022025/375f2c3b-a5ad-4330-b1ce-7ca2f623003e">
+
 # Info
 
 Simple tool for training n-gram language model. Inspired by [this course](https://lena-voita.github.io/nlp_course.html).
