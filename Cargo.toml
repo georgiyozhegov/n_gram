@@ -15,5 +15,6 @@ serde = { version = "1.0.197", features = ["derive"], optional = true }
 serde_json = { version = "1.0.114", optional = true }
 
 [features]
-saveload = ["dep:serde", "dep:serde_json"]
+default = ["serde"]
+serde = ["dep:serde", "dep:serde_json"]
 corpus = []
