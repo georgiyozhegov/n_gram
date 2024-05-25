@@ -74,8 +74,8 @@ pub fn n_grams(tokens: Vec<String>, n: usize) -> Vec<(Vec<String>, String)>
         let mut n_grams = Vec::new();
         for i in 0..tokens.len() - n + 1 {
                 n_grams.push((
-                        (&tokens[i..i + n - 1]).to_vec(),
-                        (&tokens[i + n - 1]).to_owned(),
+                        (tokens[i..i + n - 1]).to_vec(),
+                        (tokens[i + n - 1]).to_owned(),
                 ));
         }
         n_grams
@@ -284,7 +284,7 @@ impl Model
                 if let Some(tokens_) = self.model.get(&tokens) {
                         Some(tokens_)
                 }
-                else if self.config.smoothing && tokens.len() > 0 {
+                else if self.config.smoothing && !tokens.is_empty() {
                         // Backoff
                         self.get(cut(tokens.clone(), tokens.len() - 1))
                 }
@@ -347,7 +347,7 @@ impl Model
                 if let Some(counts) = self.get(tokens) {
                         {
                                 let mut counts = counts.iter().collect::<Vec<_>>();
-                                counts.sort_by(|a, b| b.1.cmp(&a.1));
+                                counts.sort_by(|a, b| b.1.cmp(a.1));
                                 let samples = max(
                                         1,
                                         (counts.len() as f32 * self.config.sampling) as usize,
