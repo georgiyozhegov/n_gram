@@ -321,8 +321,88 @@ impl Model
         }
 }
 
+impl Model
+{
+        /// Predicts next token for given `tokens`.
+        ///
+        /// # Usage
+        ///
+        /// ```
+        /// use n_gram::{
+        ///         tokenize,
+        ///         Config,
+        ///         Model,
+        /// };
+        ///
+        /// let model = Model::new(Config::default()); // assuming that your model is trained.
+        ///
+        /// let tokens = tokenize("The quick brown".to_string());
+        /// let next_token = model.predict(tokens);
+        ///
+        /// println!("{next_token}");
+        /// ```
+        pub fn predict(&self, tokens: Vec<String>) -> String
+        {
+                let tokens = cut(tokens, self.config.context);
+                if let Some(counts) = self.get(tokens) {
+                        {
+                                let mut counts = counts.iter().collect::<Vec<_>>();
+                                counts.sort_by(|a, b| b.1.cmp(&a.1));
+                                let samples = max(
+                                        1,
+                                        (counts.len() as f32 * self.config.sampling) as usize,
+                                ); // at least one sample
+                                counts.into_iter()
+                                        .map(|(k, _)| k)
+                                        .take(samples)
+                                        .collect::<Vec<_>>()
+                        }
+                        .choose(&mut rand::thread_rng())
+                        .unwrap()
+                }
+                else {
+                        EOS
+                }
+                .to_string()
+        }
+
+        /// Generates tokens using [`Model::predict()`].
+        ///
+        /// # Usage
+        ///
+        /// ```
+        /// use n_gram::{
+        ///         tokenize,
+        ///         Config,
+        ///         Model,
+        /// };
+        ///
+        /// let model = Model::new(Config::default()); // assuming that your model is trained.
+        /// let mut tokens = tokenize("The quick brown".to_string());
+        /// let max = 10; // max 10 generated tokens.
+        ///
+        /// model.generate(&mut tokens, max);
+        ///
+        /// println!("{tokens:?}");
+        /// ```
+        ///
+        /// # Note
+        ///
+        /// Stops if model predicts the EOS token.
+        pub fn generate(&self, tokens: &mut Vec<String>, max: u32)
+        {
+                for _ in 0..max {
+                        let token = self.predict(cut(tokens.to_vec(), self.config.context));
+                        tokens.push(token.clone());
+                        if token == EOS {
+                                break;
+                        }
+                }
+        }
+}
+
 #[cfg(feature = "saveload")]
-impl SaveLoad for Model
+impl Model
 {
         /// Saves model into json file.
         /// 
@@ -360,106 +440,4 @@ impl SaveLoad for Model
                         .collect::<HashMap<Vec<String>, HashMap<String, u32>>>();
                 Ok(())
         }
-}
-
-impl Predict for Model
-{
-        /// Predicts next token for given `tokens`.
-        ///
-        /// # Usage
-        ///
-        /// ```
-        /// use n_gram::{
-        ///         tokenize,
-        ///         Config,
-        ///         Model,
-        ///         Predict, // trait for predict()
-        /// };
-        ///
-        /// let model = Model::new(Config::default()); // assuming that your model is trained.
-        ///
-        /// let tokens = tokenize("The quick brown".to_string());
-        /// let next_token = model.predict(tokens);
-        ///
-        /// println!("{next_token}");
-        /// ```
-        fn predict(&self, tokens: Vec<String>) -> String
-        {
-                let tokens = cut(tokens, self.config.context);
-                if let Some(counts) = self.get(tokens) {
-                        {
-                                let mut counts = counts.iter().collect::<Vec<_>>();
-                                counts.sort_by(|a, b| b.1.cmp(&a.1));
-                                let samples = max(
-                                        1,
-                                        (counts.len() as f32 * self.config.sampling) as usize,
-                                ); // at least one sample
-                                counts.into_iter()
-                                        .map(|(k, _)| k)
-                                        .take(samples)
-                                        .collect::<Vec<_>>()
-                        }
-                        .choose(&mut rand::thread_rng())
-                        .unwrap()
-                }
-                else {
-                        EOS
-                }
-                .to_string()
-        }
-}
-
-impl Generate for Model
-{
-        /// Generates tokens using [`Model::predict()`].
-        ///
-        /// # Usage
-        ///
-        /// ```
-        /// use n_gram::{
-        ///         tokenize,
-        ///         Config,
-        ///         Generate, // trait for generate()
-        ///         Model,
-        /// };
-        ///
-        /// let model = Model::new(Config::default()); // assuming that your model is trained.
-        /// let mut tokens = tokenize("The quick brown".to_string());
-        /// let max = 10; // max 10 generated tokens.
-        ///
-        /// model.generate(&mut tokens, max);
-        ///
-        /// println!("{tokens:?}");
-        /// ```
-        ///
-        /// # Note
-        ///
-        /// Stops if model predicts the EOS token.
-        fn generate(&self, tokens: &mut Vec<String>, max: u32)
-        {
-                for _ in 0..max {
-                        let token = self.predict(cut(tokens.to_vec(), self.config.context));
-                        tokens.push(token.clone());
-                        if token == EOS {
-                                break;
-                        }
-                }
-        }
-}
-
-pub trait Predict
-{
-        fn predict(&self, tokens: Vec<String>) -> String;
-}
-
-pub trait Generate
-{
-        fn generate(&self, tokens: &mut Vec<String>, max: u32);
-}
-
-#[cfg(feature = "saveload")]
-pub trait SaveLoad
-{
-        fn save(&self, path: &str) -> Result_<usize>;
-        fn load(&mut self, path: &str) -> Result_<()>;
 }
