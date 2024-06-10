@@ -15,10 +15,12 @@ use std::{
 pub const SOS: &str = "__sos__";
 pub const EOS: &str = "__eos__";
 
-pub mod default {
-    pub const CONTEXT: usize = 2;
-    pub const SMOOTHING: bool = true;
-    pub const SAMPLING: f32 = 0.8;
+/// Default config values.
+pub mod default
+{
+        pub const CONTEXT: usize = 2;
+        pub const SMOOTHING: bool = true;
+        pub const SAMPLING: f32 = 0.8;
 }
 
 #[cfg(feature = "serde")]
@@ -195,8 +197,8 @@ fn cut(tokens: Vec<String>, context: usize) -> Vec<String>
 /// Or set specific default value if needed:
 /// ```
 /// use n_gram::{
-///         Config,
 ///         default,
+///         Config,
 /// };
 ///
 /// let config = Config::new(3, true, default::SAMPLING);
@@ -421,7 +423,7 @@ impl Model
                         .map(|(k, v)| (k.join(SPLIT_TOKEN), v))
                         .collect::<Vec<_>>();
                 let model = serde_json::to_string(&model)?;
-                file.write(model.as_bytes())?;
+                file.write_all(model.as_bytes())?;
                 Ok(0)
         }
 
