@@ -1,19 +1,25 @@
 use rand::seq::SliceRandom;
 use std::{
-    cmp::max,
-    collections::HashMap,
+        cmp::max,
+        collections::HashMap,
 };
 #[cfg(feature = "serde")]
-use std::fs::File;
-#[cfg(feature = "serde")]
-use std::io::{Write, Result};
+use std::{
+        fs::File,
+        io::{
+                Result,
+                Write,
+        },
+};
 
 pub const SOS: &str = "__sos__";
 pub const EOS: &str = "__eos__";
 
-pub const DEFAULT_CONTEXT: usize = 2;
-pub const DEFAULT_SMOOTHING: bool = true;
-pub const DEFAULT_SAMPLING: f32 = 0.8;
+pub mod default {
+    pub const CONTEXT: usize = 2;
+    pub const SMOOTHING: bool = true;
+    pub const SAMPLING: f32 = 0.8;
+}
 
 #[cfg(feature = "serde")]
 const SPLIT_TOKEN: &str = "<[SP]>";
@@ -63,7 +69,7 @@ pub fn eos(tokens: Vec<String>) -> Vec<String>
 ///         ]
 /// );
 /// ```
-/// 
+///
 /// # Note
 ///
 /// Assumes that number of `tokens` is greater than `n`.
@@ -89,7 +95,7 @@ pub fn n_grams(tokens: Vec<String>, n: usize) -> Vec<(Vec<String>, String)>
 /// let corpus = tiny_corpus();
 /// println!("First sentence: {}", corpus[0]);
 /// ```
-/// 
+///
 /// # Note
 ///
 /// Size of corpus is about 50 samples. Also, this corpus is AI-generated.
@@ -190,10 +196,10 @@ fn cut(tokens: Vec<String>, context: usize) -> Vec<String>
 /// ```
 /// use n_gram::{
 ///         Config,
-///         DEFAULT_SAMPLING,
+///         default,
 /// };
 ///
-/// let config = Config::new(3, true, DEFAULT_SAMPLING);
+/// let config = Config::new(3, true, default::SAMPLING);
 /// ```
 #[derive(Debug, Clone)]
 pub struct Config
@@ -283,7 +289,6 @@ impl Model
                         Some(tokens_)
                 }
                 else if self.config.smoothing && !tokens.is_empty() {
-                        // Backoff
                         self.get(cut(tokens.clone(), tokens.len() - 1))
                 }
                 else {
@@ -403,7 +408,7 @@ impl Model
 impl Model
 {
         /// Saves model into json file.
-        /// 
+        ///
         /// # Note
         ///
         /// Returns file.write() status code.
