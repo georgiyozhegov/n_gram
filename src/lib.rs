@@ -3,21 +3,19 @@ use std::{
     cmp::max,
     collections::HashMap,
 };
-#[cfg(feature = "saveload")]
+#[cfg(feature = "serde")]
 use std::fs::File;
-#[cfg(feature = "saveload")]
-use std::io::Write;
+#[cfg(feature = "serde")]
+use std::io::{Write, Result};
 
-/// Start-Of-Sentence token.
 pub const SOS: &str = "__sos__";
-/// End-Of-Sentence token.
 pub const EOS: &str = "__eos__";
 
 pub const DEFAULT_CONTEXT: usize = 2;
 pub const DEFAULT_SMOOTHING: bool = true;
 pub const DEFAULT_SAMPLING: f32 = 0.8;
 
-#[cfg(feature = "saveload")]
+#[cfg(feature = "serde")]
 const SPLIT_TOKEN: &str = "<[SP]>";
 
 /// Splits text by whitespaces.
@@ -401,7 +399,7 @@ impl Model
         }
 }
 
-#[cfg(feature = "saveload")]
+#[cfg(feature = "serde")]
 impl Model
 {
         /// Saves model into json file.
@@ -409,7 +407,7 @@ impl Model
         /// # Note
         ///
         /// Returns file.write() status code.
-        fn save(&self, path: &str) -> Result_<usize>
+        pub fn save(&self, path: &str) -> Result<usize>
         {
                 let mut file = File::create(path)?;
                 let model = self
@@ -423,7 +421,7 @@ impl Model
         }
 
         /// Loads model from json file.
-        fn load(&mut self, path: &str) -> Result_<()>
+        pub fn load(&mut self, path: &str) -> Result<()>
         {
                 let file = File::open(path)?;
                 let model: Vec<(String, HashMap<String, u32>)> = serde_json::from_reader(file)?;
